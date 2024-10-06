@@ -1,0 +1,20 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "app", "wasm",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0"
+
+[workspace.dependencies]
+gstd = "=1.6.1"
+sails-client-gen = "=0.6.0"
+sails-idl-gen = "=0.6.0"
+sails-rs = "=0.6.0"
+keyring-service = { git = "https://github.com/Vara-Lab/Contracts-Services"}
+parity-scale-codec = { version = "3.6", default-features = false }
+scale-info = { version = "2.10", default-features = false }

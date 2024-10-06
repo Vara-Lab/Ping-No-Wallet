@@ -1,0 +1,57 @@
+type KeyringData = struct {
+  address: str,
+  encoded: str,
+};
+
+type KeyringEvent = enum {
+  KeyringAccountSet,
+  Error: KeyringError,
+};
+
+type KeyringError = enum {
+  KeyringAddressAlreadyEsists,
+  UserAddressAlreadyExists,
+  UserCodedNameAlreadyExists,
+  UserDoesNotHasKeyringAccount,
+  KeyringAccountAlreadyExists,
+  SessionHasInvalidCredentials,
+  UserAndKeyringAddressAreTheSame,
+};
+
+type PingEvent = enum {
+  Ping,
+  Pong,
+  KeyringError: KeyringError,
+};
+
+type KeyringQueryEvent = enum {
+  LastWhoCall: actor_id,
+  SignlessAccountAddress: opt actor_id,
+  SignlessAccountData: opt KeyringData,
+};
+
+constructor {
+  New : ();
+};
+
+service KeyringService {
+  BindKeyringDataToUserAddress : (user_address: actor_id, keyring_data: KeyringData) -> KeyringEvent;
+  BindKeyringDataToUserCodedName : (user_coded_name: str, keyring_data: KeyringData) -> KeyringEvent;
+};
+
+service Ping {
+  Ping : () -> PingEvent;
+  PingNoWallet : (user_coded_name: str) -> PingEvent;
+  PingSignless : (user_address: actor_id) -> PingEvent;
+  Pong : () -> PingEvent;
+  PongNoWallet : (user_coded_name: str) -> PingEvent;
+  PongSignless : (user_address: actor_id) -> PingEvent;
+};
+
+service QueryService {
+  query LastCaller : () -> actor_id;
+  query KeyringAccountData : (keyring_address: actor_id) -> KeyringQueryEvent;
+  query KeyringAddressFromUserAddress : (user_address: actor_id) -> KeyringQueryEvent;
+  query KeyringAddressFromUserCodedName : (user_coded_name: str) -> KeyringQueryEvent;
+};
+
