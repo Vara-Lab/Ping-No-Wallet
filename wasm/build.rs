@@ -19,10 +19,6 @@ fn main() {
      let idl_path = cargo_toml_path.clone().join("app.idl");
      let client_path = outdir_path.clone().join("app_client.rs");
 
-     // Deleting actual client and idl of the contract (if any)
-     let _ = fs::remove_file(idl_path.clone());
-     let _ = fs::remove_file(cargo_toml_path.clone().join("app_client.rs"));
- 
      // This generate the contract IDL
      sails_idl_gen::generate_idl_to_file::<PingProgram>(idl_path.clone())
          .unwrap();
