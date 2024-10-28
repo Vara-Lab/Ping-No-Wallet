@@ -163,6 +163,14 @@ impl PingService {
 
         self.handle_pong(caller)
     }
+
+    // Remote call "last_caller" exposed to external consumers
+    // Returns a struct that will be sent as a response to the user
+    // Is treated as a query, because it only read the state (&self)
+    // It is used to get the las caller
+    pub fn last_caller(&self) -> ActorId {
+        PingService::state_ref().last_who_call
+    }
 }
 
 

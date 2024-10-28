@@ -11,10 +11,10 @@ edition = "2021"
 license = "GPL-3.0"
 
 [workspace.dependencies]
-gstd = "=1.6.1"
-sails-client-gen = "=0.6.0"
-sails-idl-gen = "=0.6.0"
-sails-rs = "=0.6.0"
+gstd = "=1.6.2"
+sails-client-gen = "=0.6.1"
+sails-idl-gen = "=0.6.1"
+sails-rs = "=0.6.1"
 keyring-service = { git = "https://github.com/Vara-Lab/Contracts-Services"}
 parity-scale-codec = { version = "3.6", default-features = false }
 scale-info = { version = "2.10", default-features = false }

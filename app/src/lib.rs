@@ -12,10 +12,7 @@ pub mod services;
 
 
 // Import service to be used for the program
-use services::{
-    ping_service::PingService,
-    query_service::QueryService
-};
+use services::ping_service::PingService;
 
 use keyring_service::services::keyring_service::KeyringService;
 
@@ -56,16 +53,4 @@ impl PingProgram {
     pub fn keyring_svc(&self) -> KeyringService {
         KeyringService::new()
     }
-
-    // Method working with "&self", havind no other parameters are treated as exposed
-    // service constructors, and are called each time when an incoming request message 
-    // needs be dispatched to a selected service
-    // It has "message routing", This will change the way a service will be called 
-    // (if omitted, the method name will be used, in this case QuerySvc).
-    #[route("QueryService")]
-    pub fn query_svc(&self) -> QueryService {
-        QueryService::new()
-    }
-
-
 }

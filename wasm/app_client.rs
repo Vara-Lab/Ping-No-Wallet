@@ -73,6 +73,33 @@ impl<R: Remoting + Clone> traits::KeyringService for KeyringService<R> {
             (user_coded_name, keyring_data),
         )
     }
+    fn keyring_account_data(
+        &self,
+        keyring_address: ActorId,
+    ) -> impl Query<Output = KeyringQueryEvent, Args = R::Args> {
+        RemotingAction::<_, keyring_service::io::KeyringAccountData>::new(
+            self.remoting.clone(),
+            keyring_address,
+        )
+    }
+    fn keyring_address_from_user_address(
+        &self,
+        user_address: ActorId,
+    ) -> impl Query<Output = KeyringQueryEvent, Args = R::Args> {
+        RemotingAction::<_, keyring_service::io::KeyringAddressFromUserAddress>::new(
+            self.remoting.clone(),
+            user_address,
+        )
+    }
+    fn keyring_address_from_user_coded_name(
+        &self,
+        user_coded_name: String,
+    ) -> impl Query<Output = KeyringQueryEvent, Args = R::Args> {
+        RemotingAction::<_, keyring_service::io::KeyringAddressFromUserCodedName>::new(
+            self.remoting.clone(),
+            user_coded_name,
+        )
+    }
 }
 
 pub mod keyring_service {
@@ -122,6 +149,53 @@ pub mod keyring_service {
             type Params = (String, super::KeyringData);
             type Reply = super::KeyringEvent;
         }
+        pub struct KeyringAccountData(());
+        impl KeyringAccountData {
+            #[allow(dead_code)]
+            pub fn encode_call(keyring_address: ActorId) -> Vec<u8> {
+                <KeyringAccountData as ActionIo>::encode_call(&keyring_address)
+            }
+        }
+        impl ActionIo for KeyringAccountData {
+            const ROUTE: &'static [u8] = &[
+                56, 75, 101, 121, 114, 105, 110, 103, 83, 101, 114, 118, 105, 99, 101, 72, 75, 101,
+                121, 114, 105, 110, 103, 65, 99, 99, 111, 117, 110, 116, 68, 97, 116, 97,
+            ];
+            type Params = ActorId;
+            type Reply = super::KeyringQueryEvent;
+        }
+        pub struct KeyringAddressFromUserAddress(());
+        impl KeyringAddressFromUserAddress {
+            #[allow(dead_code)]
+            pub fn encode_call(user_address: ActorId) -> Vec<u8> {
+                <KeyringAddressFromUserAddress as ActionIo>::encode_call(&user_address)
+            }
+        }
+        impl ActionIo for KeyringAddressFromUserAddress {
+            const ROUTE: &'static [u8] = &[
+                56, 75, 101, 121, 114, 105, 110, 103, 83, 101, 114, 118, 105, 99, 101, 116, 75,
+                101, 121, 114, 105, 110, 103, 65, 100, 100, 114, 101, 115, 115, 70, 114, 111, 109,
+                85, 115, 101, 114, 65, 100, 100, 114, 101, 115, 115,
+            ];
+            type Params = ActorId;
+            type Reply = super::KeyringQueryEvent;
+        }
+        pub struct KeyringAddressFromUserCodedName(());
+        impl KeyringAddressFromUserCodedName {
+            #[allow(dead_code)]
+            pub fn encode_call(user_coded_name: String) -> Vec<u8> {
+                <KeyringAddressFromUserCodedName as ActionIo>::encode_call(&user_coded_name)
+            }
+        }
+        impl ActionIo for KeyringAddressFromUserCodedName {
+            const ROUTE: &'static [u8] = &[
+                56, 75, 101, 121, 114, 105, 110, 103, 83, 101, 114, 118, 105, 99, 101, 124, 75,
+                101, 121, 114, 105, 110, 103, 65, 100, 100, 114, 101, 115, 115, 70, 114, 111, 109,
+                85, 115, 101, 114, 67, 111, 100, 101, 100, 78, 97, 109, 101,
+            ];
+            type Params = String;
+            type Reply = super::KeyringQueryEvent;
+        }
     }
 }
 pub struct Ping<R> {
@@ -163,6 +237,9 @@ impl<R: Remoting + Clone> traits::Ping for Ping<R> {
         user_address: ActorId,
     ) -> impl Call<Output = PingEvent, Args = R::Args> {
         RemotingAction::<_, ping::io::PongSignless>::new(self.remoting.clone(), user_address)
+    }
+    fn last_caller(&self) -> impl Query<Output = ActorId, Args = R::Args> {
+        RemotingAction::<_, ping::io::LastCaller>::new(self.remoting.clone(), ())
     }
 }
 
@@ -252,56 +329,6 @@ pub mod ping {
             type Params = ActorId;
             type Reply = super::PingEvent;
         }
-    }
-}
-pub struct QueryService<R> {
-    remoting: R,
-}
-impl<R> QueryService<R> {
-    pub fn new(remoting: R) -> Self {
-        Self { remoting }
-    }
-}
-impl<R: Remoting + Clone> traits::QueryService for QueryService<R> {
-    type Args = R::Args;
-    fn last_caller(&self) -> impl Query<Output = ActorId, Args = R::Args> {
-        RemotingAction::<_, query_service::io::LastCaller>::new(self.remoting.clone(), ())
-    }
-    fn keyring_account_data(
-        &self,
-        keyring_address: ActorId,
-    ) -> impl Query<Output = KeyringQueryEvent, Args = R::Args> {
-        RemotingAction::<_, query_service::io::KeyringAccountData>::new(
-            self.remoting.clone(),
-            keyring_address,
-        )
-    }
-    fn keyring_address_from_user_address(
-        &self,
-        user_address: ActorId,
-    ) -> impl Query<Output = KeyringQueryEvent, Args = R::Args> {
-        RemotingAction::<_, query_service::io::KeyringAddressFromUserAddress>::new(
-            self.remoting.clone(),
-            user_address,
-        )
-    }
-    fn keyring_address_from_user_coded_name(
-        &self,
-        user_coded_name: String,
-    ) -> impl Query<Output = KeyringQueryEvent, Args = R::Args> {
-        RemotingAction::<_, query_service::io::KeyringAddressFromUserCodedName>::new(
-            self.remoting.clone(),
-            user_coded_name,
-        )
-    }
-}
-
-pub mod query_service {
-    use super::*;
-
-    pub mod io {
-        use super::*;
-        use sails_rs::calls::ActionIo;
         pub struct LastCaller(());
         impl LastCaller {
             #[allow(dead_code)]
@@ -311,58 +338,10 @@ pub mod query_service {
         }
         impl ActionIo for LastCaller {
             const ROUTE: &'static [u8] = &[
-                48, 81, 117, 101, 114, 121, 83, 101, 114, 118, 105, 99, 101, 40, 76, 97, 115, 116,
-                67, 97, 108, 108, 101, 114,
+                16, 80, 105, 110, 103, 40, 76, 97, 115, 116, 67, 97, 108, 108, 101, 114,
             ];
             type Params = ();
             type Reply = ActorId;
-        }
-        pub struct KeyringAccountData(());
-        impl KeyringAccountData {
-            #[allow(dead_code)]
-            pub fn encode_call(keyring_address: ActorId) -> Vec<u8> {
-                <KeyringAccountData as ActionIo>::encode_call(&keyring_address)
-            }
-        }
-        impl ActionIo for KeyringAccountData {
-            const ROUTE: &'static [u8] = &[
-                48, 81, 117, 101, 114, 121, 83, 101, 114, 118, 105, 99, 101, 72, 75, 101, 121, 114,
-                105, 110, 103, 65, 99, 99, 111, 117, 110, 116, 68, 97, 116, 97,
-            ];
-            type Params = ActorId;
-            type Reply = super::KeyringQueryEvent;
-        }
-        pub struct KeyringAddressFromUserAddress(());
-        impl KeyringAddressFromUserAddress {
-            #[allow(dead_code)]
-            pub fn encode_call(user_address: ActorId) -> Vec<u8> {
-                <KeyringAddressFromUserAddress as ActionIo>::encode_call(&user_address)
-            }
-        }
-        impl ActionIo for KeyringAddressFromUserAddress {
-            const ROUTE: &'static [u8] = &[
-                48, 81, 117, 101, 114, 121, 83, 101, 114, 118, 105, 99, 101, 116, 75, 101, 121,
-                114, 105, 110, 103, 65, 100, 100, 114, 101, 115, 115, 70, 114, 111, 109, 85, 115,
-                101, 114, 65, 100, 100, 114, 101, 115, 115,
-            ];
-            type Params = ActorId;
-            type Reply = super::KeyringQueryEvent;
-        }
-        pub struct KeyringAddressFromUserCodedName(());
-        impl KeyringAddressFromUserCodedName {
-            #[allow(dead_code)]
-            pub fn encode_call(user_coded_name: String) -> Vec<u8> {
-                <KeyringAddressFromUserCodedName as ActionIo>::encode_call(&user_coded_name)
-            }
-        }
-        impl ActionIo for KeyringAddressFromUserCodedName {
-            const ROUTE: &'static [u8] = &[
-                48, 81, 117, 101, 114, 121, 83, 101, 114, 118, 105, 99, 101, 124, 75, 101, 121,
-                114, 105, 110, 103, 65, 100, 100, 114, 101, 115, 115, 70, 114, 111, 109, 85, 115,
-                101, 114, 67, 111, 100, 101, 100, 78, 97, 109, 101,
-            ];
-            type Params = String;
-            type Reply = super::KeyringQueryEvent;
         }
     }
 }
@@ -395,18 +374,18 @@ pub enum KeyringError {
 #[derive(PartialEq, Debug, Encode, Decode, TypeInfo)]
 #[codec(crate = sails_rs::scale_codec)]
 #[scale_info(crate = sails_rs::scale_info)]
-pub enum PingEvent {
-    Ping,
-    Pong,
-    KeyringError(KeyringError),
-}
-#[derive(PartialEq, Debug, Encode, Decode, TypeInfo)]
-#[codec(crate = sails_rs::scale_codec)]
-#[scale_info(crate = sails_rs::scale_info)]
 pub enum KeyringQueryEvent {
     LastWhoCall(ActorId),
     SignlessAccountAddress(Option<ActorId>),
     SignlessAccountData(Option<KeyringData>),
+}
+#[derive(PartialEq, Debug, Encode, Decode, TypeInfo)]
+#[codec(crate = sails_rs::scale_codec)]
+#[scale_info(crate = sails_rs::scale_info)]
+pub enum PingEvent {
+    Ping,
+    Pong,
+    KeyringError(KeyringError),
 }
 
 pub mod traits {
@@ -432,6 +411,18 @@ pub mod traits {
             user_coded_name: String,
             keyring_data: KeyringData,
         ) -> impl Call<Output = KeyringEvent, Args = Self::Args>;
+        fn keyring_account_data(
+            &self,
+            keyring_address: ActorId,
+        ) -> impl Query<Output = KeyringQueryEvent, Args = Self::Args>;
+        fn keyring_address_from_user_address(
+            &self,
+            user_address: ActorId,
+        ) -> impl Query<Output = KeyringQueryEvent, Args = Self::Args>;
+        fn keyring_address_from_user_coded_name(
+            &self,
+            user_coded_name: String,
+        ) -> impl Query<Output = KeyringQueryEvent, Args = Self::Args>;
     }
 
     #[allow(clippy::type_complexity)]
@@ -455,23 +446,6 @@ pub mod traits {
             &mut self,
             user_address: ActorId,
         ) -> impl Call<Output = PingEvent, Args = Self::Args>;
-    }
-
-    #[allow(clippy::type_complexity)]
-    pub trait QueryService {
-        type Args;
         fn last_caller(&self) -> impl Query<Output = ActorId, Args = Self::Args>;
-        fn keyring_account_data(
-            &self,
-            keyring_address: ActorId,
-        ) -> impl Query<Output = KeyringQueryEvent, Args = Self::Args>;
-        fn keyring_address_from_user_address(
-            &self,
-            user_address: ActorId,
-        ) -> impl Query<Output = KeyringQueryEvent, Args = Self::Args>;
-        fn keyring_address_from_user_coded_name(
-            &self,
-            user_coded_name: String,
-        ) -> impl Query<Output = KeyringQueryEvent, Args = Self::Args>;
     }
 }
